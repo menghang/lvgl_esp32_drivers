@@ -31,10 +31,10 @@
  *      DEFINES
  *********************/
 
- #define TAG "lvgl_helpers"
+#define TAG "lvgl_helpers"
 
-#define GPIO_NOT_USED   (-1)
-#define DMA_DEFAULT_TRANSFER_SIZE   (0u)
+#define GPIO_NOT_USED (-1)
+#define DMA_DEFAULT_TRANSFER_SIZE (0u)
 /**********************
  *      TYPEDEFS
  **********************/
@@ -50,7 +50,7 @@
  */
 static int calculate_spi_max_transfer_size(const int display_buffer_size);
 
-#if defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X)
+#if defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X)
 /**
  * Handle FT81X initialization as it's a particular case
  */
@@ -86,65 +86,65 @@ void lvgl_interface_init(void)
      * SPI_DMA_CH1 is only defined for ESP32, so let the driver choose which
      * channel to use, and use the proven channel 1 on esp32 targets */
     int dma_channel = 3;
-#if defined (CONFIG_IDF_TARGET_ESP32)
+#if defined(CONFIG_IDF_TARGET_ESP32)
     dma_channel = 1;
 #endif
 
-#if defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X)
+#if defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X)
     init_ft81x(dma_channel);
     return;
 #endif
 
 /* Display controller initialization */
-#if defined (CONFIG_LV_TFT_DISPLAY_PROTOCOL_SPI) || defined (SHARED_SPI_BUS)
+#if defined(CONFIG_LV_TFT_DISPLAY_PROTOCOL_SPI) || defined(SHARED_SPI_BUS)
     ESP_LOGI(TAG, "Initializing SPI master");
 
     int miso = DISP_SPI_MISO;
     int spi_max_transfer_size = calculate_spi_max_transfer_size(display_buffer_size);
 
     /* Set the miso signal to be the selected for the touch driver */
-#if defined (SHARED_SPI_BUS)
+#if defined(SHARED_SPI_BUS)
     miso = TP_SPI_MISO;
 #endif
 
     lvgl_spi_driver_init(TFT_SPI_HOST, miso, DISP_SPI_MOSI, DISP_SPI_CLK,
-        spi_max_transfer_size, dma_channel, DISP_SPI_IO2, DISP_SPI_IO3);
+                         spi_max_transfer_size, dma_channel, DISP_SPI_IO2, DISP_SPI_IO3);
 
     disp_spi_add_device(TFT_SPI_HOST);
 
     /* Add device for touch driver */
-#if defined (SHARED_SPI_BUS)
+#if defined(SHARED_SPI_BUS)
     tp_spi_add_device(TOUCH_SPI_HOST);
     touch_driver_init();
 
     return;
 #endif
 
-#elif defined (CONFIG_LV_I2C_DISPLAY)
+#elif defined(CONFIG_LV_I2C_DISPLAY)
 #else
 #error "No protocol defined for display controller"
 #endif
 
 /* Touch controller initialization */
 #if CONFIG_LV_TOUCH_CONTROLLER != TOUCH_CONTROLLER_NONE
-#if defined (CONFIG_LV_TOUCH_DRIVER_PROTOCOL_SPI)
+#if defined(CONFIG_LV_TOUCH_DRIVER_PROTOCOL_SPI)
     ESP_LOGI(TAG, "Initializing SPI master for touch");
 
-#if defined (CONFIG_IDF_TARGET_ESP32)
+#if defined(CONFIG_IDF_TARGET_ESP32)
     dma_channel = 2;
 #endif
 
     lvgl_spi_driver_init(TOUCH_SPI_HOST, TP_SPI_MISO, TP_SPI_MOSI, TP_SPI_CLK,
-        DMA_DEFAULT_TRANSFER_SIZE, dma_channel, GPIO_NOT_USED, GPIO_NOT_USED);
+                         DMA_DEFAULT_TRANSFER_SIZE, dma_channel, GPIO_NOT_USED, GPIO_NOT_USED);
 
     tp_spi_add_device(TOUCH_SPI_HOST);
 
     touch_driver_init();
-#elif defined (CONFIG_LV_I2C_TOUCH)
+#elif defined(CONFIG_LV_I2C_TOUCH)
     touch_driver_init();
-#elif defined (CONFIG_LV_TOUCH_DRIVER_ADC)
+#elif defined(CONFIG_LV_TOUCH_DRIVER_ADC)
     touch_driver_init();
-#elif defined (CONFIG_LV_TOUCH_DRIVER_DISPLAY)
+#elif defined(CONFIG_LV_TOUCH_DRIVER_DISPLAY)
     touch_driver_init();
 #else
 #error "No protocol defined for touch controller"
@@ -208,38 +208,38 @@ size_t lvgl_get_display_buffer_size(void)
     size_t disp_buffer_size = 0;
 
 #if LVGL_VERSION_MAJOR < 8
-#if defined (CONFIG_CUSTOM_DISPLAY_BUFFER_SIZE)
+#if defined(CONFIG_CUSTOM_DISPLAY_BUFFER_SIZE)
     disp_buffer_size = CONFIG_CUSTOM_DISPLAY_BUFFER_BYTES;
 #else
     /* Calculate total of 40 lines of display horizontal size */
-#if defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7789)   ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7735S)  ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7796S)  ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_HX8357)   ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9481)  ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9486)  ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9488)  ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9341)  ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X)    ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_RA8875)   ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_GC9A01)   ||  \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9163C)
+#if defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7789) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7735S) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7796S) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_HX8357) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9481) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9486) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9488) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9341) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X) ||   \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_RA8875) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_GC9A01) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9163C)
     disp_buffer_size = LV_HOR_RES_MAX * 40;
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SH1107
     disp_buffer_size = LV_HOR_RES_MAX * LV_VER_RES_MAX;
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SSD1306
-#if defined (CONFIG_LV_THEME_MONO)
+#if defined(CONFIG_LV_THEME_MONO)
     disp_buffer_size = LV_HOR_RES_MAX * (LV_VER_RES_MAX / 8);
 #else
     disp_buffer_size = LV_HOR_RES_MAX * LV_VER_RES_MAX);
 #endif
-#elif defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_IL3820)
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_IL3820)
     disp_buffer_size = LV_VER_RES_MAX * IL3820_COLUMNS;
-#elif defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_JD79653A)
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_JD79653A)
     disp_buffer_size = ((LV_VER_RES_MAX * LV_VER_RES_MAX) / 8); // 5KB
-#elif defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_UC8151D)
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_UC8151D)
     disp_buffer_size = ((LV_VER_RES_MAX * LV_VER_RES_MAX) / 8); // 2888 bytes
-#elif defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_PCD8544)
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_PCD8544)
     disp_buffer_size = (LV_HOR_RES_MAX * (LV_VER_RES_MAX / 8));
 #else
 #error "No display controller selected"
@@ -262,24 +262,23 @@ size_t lvgl_get_display_buffer_size(void)
  * header available since ESP-IDF v4.
  */
 bool lvgl_spi_driver_init(int host,
-    int miso_pin, int mosi_pin, int sclk_pin,
-    int max_transfer_sz,
-    int dma_channel,
-    int quadwp_pin, int quadhd_pin)
+                          int miso_pin, int mosi_pin, int sclk_pin,
+                          int max_transfer_sz,
+                          int dma_channel,
+                          int quadwp_pin, int quadhd_pin)
 {
-#if defined (SPI_HOST_MAX)
+#if defined(SPI_HOST_MAX)
     assert((SPI1_HOST <= host) && (SPI_HOST_MAX > host));
 #else
     assert((SPI1_HOST <= host) && ((SPI3_HOST + 1) > host));
 #endif
 
     const char *spi_names[] = {
-        "SPI1_HOST", "SPI2_HOST", "SPI3_HOST"
-    };
+        "SPI1_HOST", "SPI2_HOST", "SPI3_HOST"};
 
     ESP_LOGI(TAG, "Configuring SPI host %s", spi_names[host]);
     ESP_LOGI(TAG, "MISO pin: %d, MOSI pin: %d, SCLK pin: %d, IO2/WP pin: %d, IO3/HD pin: %d",
-        miso_pin, mosi_pin, sclk_pin, quadwp_pin, quadhd_pin);
+             miso_pin, mosi_pin, sclk_pin, quadwp_pin, quadhd_pin);
 
     ESP_LOGI(TAG, "Max transfer size: %d (bytes)", max_transfer_sz);
 
@@ -289,17 +288,16 @@ bool lvgl_spi_driver_init(int host,
         .sclk_io_num = sclk_pin,
         .quadwp_io_num = quadwp_pin,
         .quadhd_io_num = quadhd_pin,
-        .max_transfer_sz = max_transfer_sz
-    };
+        .max_transfer_sz = max_transfer_sz};
 
     ESP_LOGI(TAG, "Initializing SPI bus...");
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 3, 0)
-    esp_err_t ret = spi_bus_initialize((spi_host_device_t) host, &buscfg, (spi_dma_chan_t)dma_channel);
+    esp_err_t ret = spi_bus_initialize((spi_host_device_t)host, &buscfg, (spi_dma_chan_t)dma_channel);
 #else
     esp_err_t ret = spi_bus_initialize(host, &buscfg, dma_channel);
 #endif
-    
+
     assert(ret == ESP_OK);
 
     return ESP_OK != ret;
@@ -308,39 +306,39 @@ bool lvgl_spi_driver_init(int host,
 static int calculate_spi_max_transfer_size(const int display_buffer_size)
 {
     int retval = 0;
-    
-#if defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9481) || \
-    defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9488)
+
+#if defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9481) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9488)
     retval = display_buffer_size * 3;
-#elif defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9341)  || \
-      defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7789)   || \
-      defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7735S)  || \
-      defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_HX8357)   || \
-      defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_SH1107)   || \
-      defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X)    || \
-      defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_IL3820)   || \
-      defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_JD79653A) || \
-      defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9163C)
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9341) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7789) ||    \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7735S) ||   \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_HX8357) ||    \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_SH1107) ||    \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X) ||     \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_IL3820) ||    \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_JD79653A) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9163C)
     retval = display_buffer_size * 2;
 #else
     retval = display_buffer_size * 2;
 #endif
-    
+
     return retval;
 }
 
-#if defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X)
+#if defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X)
 static void init_ft81x(int dma_channel)
 {
     size_t display_buffer_size = lvgl_get_display_buffer_size();
     int spi_max_transfer_size = calculate_spi_max_transfer_size(display_buffer_size);
 
     lvgl_spi_driver_init(TFT_SPI_HOST, DISP_SPI_MISO, DISP_SPI_MOSI, DISP_SPI_CLK,
-        spi_max_transfer_size, dma_channel, DISP_SPI_IO2, DISP_SPI_IO3);
+                         spi_max_transfer_size, dma_channel, DISP_SPI_IO2, DISP_SPI_IO3);
 
     disp_spi_add_device(TFT_SPI_HOST);
 
-#if defined (CONFIG_LV_TOUCH_CONTROLLER_FT81X)
+#if defined(CONFIG_LV_TOUCH_CONTROLLER_FT81X)
     touch_driver_init();
 #endif
 }

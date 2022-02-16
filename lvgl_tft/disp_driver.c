@@ -36,11 +36,11 @@ void *disp_driver_init(lv_disp_drv_t *drv)
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_RA8875
     ra8875_init();
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_GC9A01
-   GC9A01_init();
+    GC9A01_init();
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_JD79653A
-   jd79653a_init();
+    jd79653a_init();
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_UC8151D
-   uc8151d_init();
+    uc8151d_init();
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9163C
     ili9163c_init();
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_PCD8544
@@ -78,7 +78,7 @@ void *disp_backlight_init(void)
 #endif
 }
 
-void disp_driver_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map)
+void disp_driver_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
 {
 #if defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9341
     ili9341_flush(drv, area, color_map);
@@ -93,11 +93,11 @@ void disp_driver_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t *
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7735S
     st7735s_flush(drv, area, color_map);
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_HX8357
-	hx8357_flush(drv, area, color_map);
+    hx8357_flush(drv, area, color_map);
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9486
     ili9486_flush(drv, area, color_map);
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SH1107
-	sh1107_flush(drv, area, color_map);
+    sh1107_flush(drv, area, color_map);
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SSD1306
     ssd1306_flush(drv, area, color_map);
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X
@@ -119,7 +119,7 @@ void disp_driver_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t *
 #endif
 }
 
-void disp_driver_rounder(lv_disp_drv_t * disp_drv, lv_area_t * area)
+void disp_driver_rounder(lv_disp_drv_t *disp_drv, lv_area_t *area)
 {
 #if defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SSD1306
     ssd1306_rounder(disp_drv, area);
@@ -136,8 +136,8 @@ void disp_driver_rounder(lv_disp_drv_t * disp_drv, lv_area_t * area)
 #endif
 }
 
-void disp_driver_set_px(lv_disp_drv_t * disp_drv, uint8_t * buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
-    lv_color_t color, lv_opa_t opa)
+void disp_driver_set_px(lv_disp_drv_t *disp_drv, uint8_t *buf, lv_coord_t buf_w, lv_coord_t x, lv_coord_t y,
+                        lv_color_t color, lv_opa_t opa)
 {
 #if defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SSD1306
     ssd1306_set_px_cb(disp_drv, buf, buf_w, x, y, color, opa);
@@ -150,6 +150,6 @@ void disp_driver_set_px(lv_disp_drv_t * disp_drv, uint8_t * buf, lv_coord_t buf_
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_UC8151D
     uc8151d_lv_set_fb_cb(disp_drv, buf, buf_w, x, y, color, opa);
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_PCD8544
-   pcd8544_set_px_cb(disp_drv, buf, buf_w, x, y, color, opa);
+    pcd8544_set_px_cb(disp_drv, buf, buf_w, x, y, color, opa);
 #endif
 }
