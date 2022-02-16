@@ -248,6 +248,44 @@ size_t lvgl_get_display_buffer_size(void)
 
 #else /* LVGL v8 */
     /* ToDo: Implement display buffer size calculation with configuration values from the display driver */
+
+#if defined(CONFIG_CUSTOM_DISPLAY_BUFFER_SIZE)
+    disp_buffer_size = CONFIG_CUSTOM_DISPLAY_BUFFER_BYTES;
+#else
+    /* Calculate total of 40 lines of display horizontal size */
+#if defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7789) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7735S) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7796S) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_HX8357) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9481) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9486) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9488) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9341) || \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_FT81X) ||   \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_RA8875) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_GC9A01) ||  \
+    defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9163C)
+    disp_buffer_size = LV_HOR_RES_MAX * 40;
+#elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SH1107
+    disp_buffer_size = LV_HOR_RES_MAX * LV_VER_RES_MAX;
+#elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SSD1306
+#if defined(CONFIG_LV_THEME_MONO)
+    disp_buffer_size = LV_HOR_RES_MAX * (LV_VER_RES_MAX / 8);
+#else
+    disp_buffer_size = LV_HOR_RES_MAX * LV_VER_RES_MAX);
+#endif
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_IL3820)
+    disp_buffer_size = LV_VER_RES_MAX * IL3820_COLUMNS;
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_JD79653A)
+    disp_buffer_size = ((LV_VER_RES_MAX * LV_VER_RES_MAX) / 8); // 5KB
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_UC8151D)
+    disp_buffer_size = ((LV_VER_RES_MAX * LV_VER_RES_MAX) / 8); // 2888 bytes
+#elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_PCD8544)
+    disp_buffer_size = (LV_HOR_RES_MAX * (LV_VER_RES_MAX / 8));
+#else
+#error "No display controller selected"
+#endif
+#endif
 #endif
 
     return disp_buffer_size;
