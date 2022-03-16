@@ -57,6 +57,9 @@ static int calculate_spi_max_transfer_size(const int display_buffer_size);
 static void init_ft81x(int dma_channel);
 #endif
 
+static lv_coord_t get_display_hor_res(lv_disp_drv_t *drv);
+static lv_coord_t get_display_ver_res(lv_disp_drv_t *drv);
+
 /**********************
  *  STATIC VARIABLES
  **********************/
@@ -70,15 +73,12 @@ static void init_ft81x(int dma_channel);
  **********************/
 
 /* Interface (SPI, I2C) initialization */
-void lvgl_interface_init(void)
+void lvgl_interface_init(lv_disp_drv_t *drv)
 {
-    /* Since LVGL v8 LV_HOR_RES_MAX and LV_VER_RES_MAX are not defined, so
-     * print it only if they are defined. */
-#if (LVGL_VERSION_MAJOR < 8)
-    ESP_LOGI(TAG, "Display hor size: %d, ver size: %d", LV_HOR_RES_MAX, LV_VER_RES_MAX);
-#endif
+    ESP_LOGI(TAG, "Display hor size: %d, ver size: %d",
+             get_display_hor_res(drv), get_display_ver_res(drv));
 
-    size_t display_buffer_size = lvgl_get_display_buffer_size();
+    size_t display_buffer_size = lvgl_get_display_buffer_size(drv);
 
     ESP_LOGI(TAG, "Display buffer size: %d", display_buffer_size);
 
@@ -203,11 +203,10 @@ void lvgl_display_gpios_init(void)
  * color format being used, for RGB565 each pixel needs 2 bytes.
  * When using the mono theme, the display pixels can be represented in one bit,
  * so the buffer size can be divided by 8, e.g. see SSD1306 display size. */
-size_t lvgl_get_display_buffer_size(void)
+size_t lvgl_get_display_buffer_size(lv_disp_drv_t *drv)
 {
     size_t disp_buffer_size = 0;
 
-#if LVGL_VERSION_MAJOR < 8
 #if defined(CONFIG_CUSTOM_DISPLAY_BUFFER_SIZE)
     disp_buffer_size = CONFIG_CUSTOM_DISPLAY_BUFFER_BYTES;
 #else
@@ -224,30 +223,26 @@ size_t lvgl_get_display_buffer_size(void)
     defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_RA8875) ||  \
     defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_GC9A01) ||  \
     defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9163C)
-    disp_buffer_size = LV_HOR_RES_MAX * 40;
+    disp_buffer_size = get_display_hor_res(drv) * 40;
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SH1107
-    disp_buffer_size = LV_HOR_RES_MAX * LV_VER_RES_MAX;
+    disp_buffer_size = get_display_hor_res(drv) * get_display_ver_res(drv);
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SSD1306
 #if defined(CONFIG_LV_THEME_MONO)
-    disp_buffer_size = LV_HOR_RES_MAX * (LV_VER_RES_MAX / 8);
+    disp_buffer_size = get_display_hor_res(drv) * (get_display_ver_res(drv) / 8);
 #else
-    disp_buffer_size = LV_HOR_RES_MAX * LV_VER_RES_MAX);
+    disp_buffer_size = get_display_hor_res(drv) * get_display_ver_res(drv));
 #endif
 #elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_IL3820)
-    disp_buffer_size = LV_VER_RES_MAX * IL3820_COLUMNS;
+    disp_buffer_size = get_display_ver_res(drv) * IL3820_COLUMNS;
 #elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_JD79653A)
-    disp_buffer_size = ((LV_VER_RES_MAX * LV_VER_RES_MAX) / 8); // 5KB
+    disp_buffer_size = ((get_display_ver_res(drv) * get_display_ver_res(drv)) / 8); // 5KB
 #elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_UC8151D)
-    disp_buffer_size = ((LV_VER_RES_MAX * LV_VER_RES_MAX) / 8); // 2888 bytes
+    disp_buffer_size = ((get_display_ver_res(drv) * get_display_ver_res(drv)) / 8); // 2888 bytes
 #elif defined(CONFIG_LV_TFT_DISPLAY_CONTROLLER_PCD8544)
-    disp_buffer_size = (LV_HOR_RES_MAX * (LV_VER_RES_MAX / 8));
+    disp_buffer_size = (get_display_hor_res(drv) * (get_display_ver_res(drv) / 8));
 #else
 #error "No display controller selected"
 #endif
-#endif
-
-#else /* LVGL v8 */
-    /* ToDo: Implement display buffer size calculation with configuration values from the display driver */
 #endif
 
     return disp_buffer_size;
@@ -343,3 +338,31 @@ static void init_ft81x(int dma_channel)
 #endif
 }
 #endif
+
+static lv_coord_t get_display_hor_res(lv_disp_drv_t *drv)
+{
+    lv_coord_t retval = 0;
+
+#if (LVGL_VERSION_MAJOR >= 8)
+    retval = drv->hor_res;
+#else
+    (void)drv;
+    retval = LV_HOR_RES_MAX;
+#endif
+
+    return retval;
+}
+
+static lv_coord_t get_display_ver_res(lv_disp_drv_t *drv)
+{
+    lv_coord_t retval = 0;
+
+#if (LVGL_VERSION_MAJOR >= 8)
+    retval = drv->ver_res;
+#else
+    (void)drv;
+    retval = LV_VER_RES_MAX;
+#endif
+
+    return retval;
+}

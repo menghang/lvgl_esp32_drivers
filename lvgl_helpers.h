@@ -34,7 +34,7 @@ extern "C" {
 void lvgl_i2c_locking(void* leader);
 
 /* Initialize detected SPI and I2C bus and devices */
-void lvgl_interface_init(void);
+void lvgl_interface_init(lv_disp_drv_t *drv);
 
 /* Initialize SPI master  */
 bool lvgl_spi_driver_init(int host, int miso_pin, int mosi_pin, int sclk_pin,
@@ -44,7 +44,7 @@ bool lvgl_spi_driver_init(int host, int miso_pin, int mosi_pin, int sclk_pin,
 void lvgl_display_gpios_init(void);
 
 /* Get display buffer size */
-size_t lvgl_get_display_buffer_size(void);
+size_t lvgl_get_display_buffer_size(lv_disp_drv_t *drv);
 
 /**********************
  *      MACROS
