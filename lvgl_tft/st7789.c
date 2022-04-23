@@ -9,6 +9,8 @@
 #include "disp_spi.h"
 #include "display_port.h"
 
+#include "esp_log.h"
+
 /*********************
  *      DEFINES
  *********************/
@@ -18,29 +20,31 @@
  **********************/
 
 /*The LCD needs a bunch of command/argument values to be initialized. They are stored in this struct. */
-typedef struct {
+typedef struct
+{
     uint8_t cmd;
     uint8_t data[16];
-    uint8_t databytes; //No of data in data; bit 7 = delay after set; 0xFF = end of cmds.
+    uint8_t databytes; // No of data in data; bit 7 = delay after set; 0xFF = end of cmds.
 } lcd_init_cmd_t;
 
 /**********************
  *  STATIC PROTOTYPES
  **********************/
 static void st7789_set_orientation(lv_disp_drv_t *drv, uint8_t orientation);
-static void st7789_send_cmd(lv_disp_drv_t * drv, uint8_t cmd);
-static void st7789_send_data(lv_disp_drv_t * drv, void *data, uint16_t length);
-static void st7789_send_color(lv_disp_drv_t * drv, void *data, uint16_t length);
-static void st7789_reset(lv_disp_drv_t * drv);
+static void st7789_send_cmd(lv_disp_drv_t *drv, uint8_t cmd);
+static void st7789_send_data(lv_disp_drv_t *drv, void *data, uint16_t length);
+static void st7789_send_color(lv_disp_drv_t *drv, void *data, uint16_t length);
+static void st7789_reset(lv_disp_drv_t *drv);
 
-static void setup_initial_offsets(lv_disp_drv_t * drv);
-static lv_coord_t get_display_hor_res(lv_disp_drv_t * drv);
-static lv_coord_t get_display_ver_res(lv_disp_drv_t * drv);
+static void setup_initial_offsets(lv_disp_drv_t *drv);
+static lv_coord_t get_display_hor_res(lv_disp_drv_t *drv);
+static lv_coord_t get_display_ver_res(lv_disp_drv_t *drv);
 /**********************
  *  STATIC VARIABLES
  **********************/
 static uint16_t user_x_offset = 0u;
 static uint16_t user_y_offset = 0u;
+static const char *TAG = "ST7789";
 
 /**********************
  *      MACROS
@@ -68,9 +72,9 @@ void st7789_init(lv_disp_drv_t *drv)
         {ST7789_COLMOD, {0x55}, 1},
 
 #if ST7789_INVERT_COLORS == 1
-		{ST7789_INVON, {0}, 0}, // set inverted mode
+        {ST7789_INVON, {0}, 0}, // set inverted mode
 #else
- 		{ST7789_INVOFF, {0}, 0}, // set non-inverted mode
+        {ST7789_INVOFF, {0}, 0}, // set non-inverted mode
 #endif
 
         {ST7789_RGBCTRL, {0x00, 0x1B}, 2},
@@ -90,12 +94,14 @@ void st7789_init(lv_disp_drv_t *drv)
 
     st7789_reset(drv);
 
-    //Send all the commands
+    // Send all the commands
     uint16_t cmd = 0;
-    while (st7789_init_cmds[cmd].databytes!=0xff) {
+    while (st7789_init_cmds[cmd].databytes != 0xff)
+    {
         st7789_send_cmd(drv, st7789_init_cmds[cmd].cmd);
-        st7789_send_data(drv, st7789_init_cmds[cmd].data, st7789_init_cmds[cmd].databytes&0x1F);
-        if (st7789_init_cmds[cmd].databytes & 0x80) {
+        st7789_send_data(drv, st7789_init_cmds[cmd].data, st7789_init_cmds[cmd].databytes & 0x1F);
+        if (st7789_init_cmds[cmd].databytes & 0x80)
+        {
             display_port_delay(drv, 100);
         }
         cmd++;
@@ -104,9 +110,9 @@ void st7789_init(lv_disp_drv_t *drv)
     /* NOTE: Setting rotation from lv_disp_drv_t instead of menuconfig */
     lv_disp_rot_t rotation;
 #if (LVGL_VERSION_MAJOR >= 8)
-    rotation = lv_disp_get_rotation((lv_disp_t *) &drv);
+    rotation = lv_disp_get_rotation((lv_disp_t *)&drv);
 #else
-    rotation = lv_disp_get_rotation((lv_disp_t *) drv);
+    rotation = lv_disp_get_rotation((lv_disp_t *)drv);
 #endif
 
     st7789_set_orientation(drv, rotation);
@@ -115,7 +121,7 @@ void st7789_init(lv_disp_drv_t *drv)
 /* The ST7789 display controller can drive up to 320*240 displays, when using a 240*240 or 240*135
  * displays there's a gap of 80px or 40/52/53px respectively. 52px or 53x offset depends on display orientation.
  * We need to edit the coordinates to take into account those gaps, this is not necessary in all orientations. */
-void st7789_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map)
+void st7789_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
 {
     uint8_t data[4] = {0};
 
@@ -129,9 +135,10 @@ void st7789_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * colo
      * in LVGLv8 we use the driver update callback. */
 #if (LVGL_VERSION_MAJOR < 8)
     static lv_disp_rot_t cached_rotation = LV_DISP_ROT_NONE;
-    lv_disp_rot_t rotation = lv_disp_get_rotation((lv_disp_t *) drv);
-    if (cached_rotation != rotation) {
-        st7789_set_orientation(drv, (uint8_t) rotation);
+    lv_disp_rot_t rotation = lv_disp_get_rotation((lv_disp_t *)drv);
+    if (cached_rotation != rotation)
+    {
+        st7789_set_orientation(drv, (uint8_t)rotation);
         /* Update offset values */
         setup_initial_offsets(drv);
         cached_rotation = rotation;
@@ -161,7 +168,7 @@ void st7789_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * colo
 
     /*Memory write*/
     st7789_send_cmd(drv, ST7789_RAMWR);
-    st7789_send_color(drv, (void*) color_map, size * 2);
+    st7789_send_color(drv, (void *)color_map, size * 2);
 }
 
 void st7789_set_x_offset(const uint16_t offset)
@@ -194,14 +201,14 @@ static void st7789_send_cmd(lv_disp_drv_t *drv, uint8_t cmd)
     disp_spi_send_data(&cmd, 1);
 }
 
-static void st7789_send_data(lv_disp_drv_t *drv, void * data, uint16_t length)
+static void st7789_send_data(lv_disp_drv_t *drv, void *data, uint16_t length)
 {
     disp_wait_for_pending_transactions();
     display_port_gpio_dc(drv, 1);
     disp_spi_send_data(data, length);
 }
 
-static void st7789_send_color(lv_disp_drv_t *drv, void * data, uint16_t length)
+static void st7789_send_color(lv_disp_drv_t *drv, void *data, uint16_t length)
 {
     disp_wait_for_pending_transactions();
     display_port_gpio_dc(drv, 1);
@@ -227,23 +234,29 @@ static void st7789_set_orientation(lv_disp_drv_t *drv, uint8_t orientation)
     uint8_t data[] =
     {
 #if CONFIG_LV_PREDEFINED_DISPLAY_TTGO
-	0x60, 0xA0, 0x00, 0xC0
+        0x60,
+        0xA0,
+        0x00,
+        0xC0
 #else
-	0xC0, 0x60, 0x00, 0xA0
+        0xC0,
+        0x60,
+        0x00,
+        0xA0
 #endif
     };
 
     st7789_send_cmd(drv, ST7789_MADCTL);
-    st7789_send_data(drv, (void *) &data[orientation], 1);
+    st7789_send_data(drv, (void *)&data[orientation], 1);
 }
 
-static void setup_initial_offsets(lv_disp_drv_t * drv)
+static void setup_initial_offsets(lv_disp_drv_t *drv)
 {
     lv_disp_rot_t rotation;
 #if (LVGL_VERSION_MAJOR >= 8)
-    rotation = lv_disp_get_rotation((lv_disp_t *) &drv);
+    rotation = lv_disp_get_rotation((lv_disp_t *)&drv);
 #else
-    rotation = lv_disp_get_rotation((lv_disp_t *) drv);
+    rotation = lv_disp_get_rotation((lv_disp_t *)drv);
 #endif
 
 #if (CONFIG_LV_TFT_DISPLAY_OFFSETS)
@@ -301,39 +314,43 @@ static void setup_initial_offsets(lv_disp_drv_t * drv)
  * NOTE Available only for LVGL v8 */
 void st7789_update_cb(lv_disp_drv_t *drv)
 {
-    lv_disp_rot_t rotation;
+    static lv_disp_rot_t cached_rotation = LV_DISP_ROT_NONE;
 #if (LVGL_VERSION_MAJOR >= 8)
-    rotation = lv_disp_get_rotation((lv_disp_t *) &drv);
+    lv_disp_rot_t rotation = lv_disp_get_rotation((lv_disp_t *)&drv);
 #else
-    rotation = lv_disp_get_rotation((lv_disp_t *) drv);
+    lv_disp_rot_t rotation = lv_disp_get_rotation((lv_disp_t *)drv);
 #endif
-
-    st7789_set_orientation(drv, (uint8_t) rotation);
-    setup_initial_offsets(drv);
+    if (rotation != cached_rotation)
+    {
+        st7789_set_orientation(drv, (uint8_t)rotation);
+        setup_initial_offsets(drv);
+        cached_rotation = rotation;
+        ESP_LOGI(TAG, "New rotation -> 0x%02X", rotation);
+    }
 }
 
-static lv_coord_t get_display_hor_res(lv_disp_drv_t * drv)
+static lv_coord_t get_display_hor_res(lv_disp_drv_t *drv)
 {
     lv_coord_t retval = 0;
 
 #if (LVGL_VERSION_MAJOR >= 8)
     retval = drv->hor_res;
 #else
-    (void) drv;
+    (void)drv;
     retval = LV_HOR_RES_MAX;
 #endif
 
     return retval;
 }
 
-static lv_coord_t get_display_ver_res(lv_disp_drv_t * drv)
+static lv_coord_t get_display_ver_res(lv_disp_drv_t *drv)
 {
     lv_coord_t retval = 0;
 
 #if (LVGL_VERSION_MAJOR >= 8)
     retval = drv->ver_res;
 #else
-    (void) drv;
+    (void)drv;
     retval = LV_VER_RES_MAX;
 #endif
 
